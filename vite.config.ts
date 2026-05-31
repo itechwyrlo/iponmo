@@ -7,15 +7,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        runtimeCaching: [
-          {
-            urlPattern: ({ request }) => request.destination === 'document',
-            handler: 'NetworkFirst',
-          },
-        ],
-      },
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       manifest: {
         name: 'IponMo - Paluwagan App',
         short_name: 'IponMo',
@@ -23,8 +17,9 @@ export default defineConfig({
         background_color: '#0f0e17',
         display: 'standalone',
         icons: [
-          { src: '/logo192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-          { src: '/logo512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+          { src: '/logo192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: '/logo192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+          { src: '/logo512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
         ],
       },
     }),
