@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { MainLayout } from './pages/MainLayout';
+import InstallPrompt from './components/InstallPrompt';
 
 const LoginPage = lazy(() => import('./pages/LoginPage').then((m) => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then((m) => ({ default: m.RegisterPage })));
@@ -34,6 +35,7 @@ export function App() {
           </Routes>
         </Suspense>
         <Toaster position="top-center" />
+        <InstallPrompt />
       </AuthProvider>
     </BrowserRouter>
   );

@@ -7,12 +7,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      strategies: 'injectManifest',
-      srcDir: 'src',
-      filename: 'sw.ts',
       manifest: {
         name: 'IponMo - Paluwagan App',
         short_name: 'IponMo',
+        description: 'Paluwagan made simple',
         theme_color: '#f4a535',
         background_color: '#0f0e17',
         display: 'standalone',
