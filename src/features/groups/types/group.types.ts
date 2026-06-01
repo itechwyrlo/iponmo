@@ -71,3 +71,10 @@ export interface AddMemberRequest {
   accountId: string;
   slotNumber: number;
 }
+
+export interface MarkPaymentResponse {
+  memberId: string;
+  round: number;
+  isPaid: boolean;
+  paidAt: string;
+}

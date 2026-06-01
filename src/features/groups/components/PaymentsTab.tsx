@@ -7,7 +7,7 @@ interface PaymentsTabProps {
   loading: boolean;
   currentRound: number;
   isOrganizer: boolean;
-  onMarkPaid: (memberId: string) => void;
+  onMarkPaid: (memberId: string, round: number) => void;
   onPayClick: () => void;
 }
 
@@ -59,7 +59,7 @@ export function PaymentsTab({
                   <button
                     className="btn btn-primary"
                     style={{ width: 'auto', padding: '8px 14px', fontSize: 13 }}
-                    onClick={() => onMarkPaid(p.memberId)}
+                    onClick={() => onMarkPaid(p.memberId, p.round)}
                   >
                     Mark Paid
                   </button>

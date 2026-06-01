@@ -22,7 +22,7 @@ interface UseGroupDetailResult {
   loadingTab: boolean;
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
-  handleMarkPaid: (memberId: string) => Promise<void>;
+  handleMarkPaid: (memberId: string, round: number) => Promise<void>;
   handleAddMember: (accountId: string, slotNumber: number) => Promise<void>;
 }
 
@@ -80,14 +80,14 @@ export function useGroupDetail(groupId: string): UseGroupDetailResult {
     return () => { cancelled = true; };
   }, [token, groupId, activeTab, loadedTabs]);
 
-  async function handleMarkPaid(memberId: string) {
+  async function handleMarkPaid(memberId: string, round: number) {
     if (!token) return;
     try {
-      await markPaymentAsPaid(token, groupId, memberId);
+      const result = await markPaymentAsPaid(token, groupId, memberId, round);
       setPayments((prev) =>
         prev.map((p) =>
           p.memberId === memberId
-            ? { ...p, isPaid: true, paidAt: new Date().toISOString() }
+            ? { ...p, isPaid: result.isPaid, paidAt: result.paidAt }
             : p
         )
       );

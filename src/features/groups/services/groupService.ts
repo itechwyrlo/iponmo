@@ -4,6 +4,7 @@ import type {
   GroupDetail,
   GroupListResponse,
   GroupSummary,
+  MarkPaymentResponse,
   MemberDetail,
   PaymentStatus,
   PayoutHistory,
@@ -64,14 +65,20 @@ export async function createGroup(token: string, data: CreateGroupRequest): Prom
 export async function markPaymentAsPaid(
   token: string,
   groupId: string,
-  memberId: string
-): Promise<void> {
+  memberId: string,
+  round: number
+): Promise<MarkPaymentResponse> {
   const response = await apiFetch(
-    `${BASE_URL}/api/groups/${groupId}/payments/${memberId}/paid`,
-    { method: 'PATCH' },
+    `${BASE_URL}/api/groups/${groupId}/payments/${memberId}`,
+    {
+      method: 'PATCH',
+      headers: JSON_CONTENT,
+      body: JSON.stringify({ round }),
+    },
     token
   );
   if (!response.ok) throw new Error('Failed to mark payment.');
+  return response.json();
 }
 
 export async function addMember(
