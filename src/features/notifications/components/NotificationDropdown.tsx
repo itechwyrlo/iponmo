@@ -53,7 +53,7 @@ export function NotificationDropdown({
           width: `min(320px, calc(100vw - 32px))`,
           maxHeight: '60vh',
           overflowY: 'auto',
-          background: 'var(--surface)',
+          background: 'var(--card)',
           border: '1px solid var(--border)',
           borderRadius: 12,
           boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
@@ -69,7 +69,7 @@ export function NotificationDropdown({
             borderBottom: '1px solid var(--border)',
             position: 'sticky',
             top: 0,
-            background: 'var(--surface)',
+            background: 'var(--card)',
           }}
         >
           <span style={{ fontWeight: 600, fontSize: 16 }}>Notifications</span>
@@ -118,7 +118,7 @@ export function NotificationDropdown({
                 }}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontWeight: 600, margin: 0, fontSize: 14, color: 'var(--text1)' }}>
+                <p style={{ fontWeight: 600, margin: 0, fontSize: 14, color: 'var(--text)' }}>
                   {n.senderName}
                 </p>
                 <p

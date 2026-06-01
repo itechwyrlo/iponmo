@@ -13,7 +13,7 @@ export function NotificationBell({ unreadCount, onClick }: NotificationBellProps
         border: 'none',
         cursor: 'pointer',
         padding: 8,
-        color: 'var(--text1)',
+        color: 'var(--text)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

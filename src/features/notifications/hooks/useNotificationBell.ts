@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { useNotificationContext } from '../../../context/NotificationContext';
 import type { AppNotification } from '../types/notification.types';
@@ -25,6 +25,15 @@ export function useNotificationBell(): UseNotificationBellResult {
   const [showNotifications, setShowNotifications] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, right: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showNotifications) return;
+    function handleScroll() {
+      setShowNotifications(false);
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [showNotifications]);
 
   function toggleNotifications() {
     if (!showNotifications && containerRef.current) {
