@@ -121,8 +121,8 @@ export function GroupDetailPage() {
 
       {showPaymentInfo && (
         <PaymentInfoSheet
-          organizerGCash={detail.organizerGCash}
-          organizerMaya={detail.organizerMaya}
+          organizerGCash={detail.organizerGCashNumber}
+          organizerMaya={detail.organizerMayaNumber}
           contributionAmount={detail.contributionAmount}
           onClose={() => setShowPaymentInfo(false)}
         />

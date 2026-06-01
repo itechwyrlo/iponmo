@@ -56,8 +56,8 @@ export interface GroupDetail {
   status: GroupStatus;
   paidCount: number;
   collectedAmount: number;
-  organizerGCash: string | null;
-  organizerMaya: string | null;
+  organizerGCashNumber: string | null;
+  organizerMayaNumber: string | null;
 }
 
 export interface CreateGroupRequest {
