@@ -41,28 +41,28 @@ export function GroupListPage() {
     <div className="screen">
       <div className="page-header" style={{ paddingBottom: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <p style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 600 }}>
-              Kumusta, {user?.email} 👋
-            </p>
-            <h1 style={{ fontSize: 26, marginTop: 2 }}>My Groups</h1>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div ref={containerRef}>
-              <NotificationBell unreadCount={unreadCount} onClick={toggleNotifications} />
-              {showNotifications && (
-                <NotificationDropdown
-                  notifications={notifications}
-                  onNotificationClick={handleNotificationClick}
-                  onMarkAllRead={markAllAsRead}
-                  onClose={closeNotifications}
-                  position={dropdownPosition}
-                />
-              )}
-            </div>
-            <div className="avatar" style={{ width: 44, height: 44, fontSize: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="avatar" style={{ width: 44, height: 44, fontSize: 16, flexShrink: 0 }}>
               {user?.email.charAt(0).toUpperCase()}
             </div>
+            <div>
+              <p style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 600 }}>
+                Kumusta, {user?.email} 👋
+              </p>
+              <h1 style={{ fontSize: 26, marginTop: 2 }}>My Groups</h1>
+            </div>
+          </div>
+          <div ref={containerRef}>
+            <NotificationBell unreadCount={unreadCount} onClick={toggleNotifications} />
+            {showNotifications && (
+              <NotificationDropdown
+                notifications={notifications}
+                onNotificationClick={handleNotificationClick}
+                onMarkAllRead={markAllAsRead}
+                onClose={closeNotifications}
+                position={dropdownPosition}
+              />
+            )}
           </div>
         </div>
 
