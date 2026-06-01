@@ -7,10 +7,12 @@ interface MembersTabProps {
   loading: boolean;
   currentRound: number;
   isOrganizer: boolean;
+  organizerId: string;
   onAddMember: () => void;
+  onMessageClick: (userId: string, userName: string) => void;
 }
 
-export function MembersTab({ members, loading, currentRound, isOrganizer, onAddMember }: MembersTabProps) {
+export function MembersTab({ members, loading, currentRound, isOrganizer, organizerId, onAddMember, onMessageClick }: MembersTabProps) {
   if (loading) return <TabContentSkeleton />;
 
   return (
@@ -30,6 +32,7 @@ export function MembersTab({ members, loading, currentRound, isOrganizer, onAddM
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {[...members].sort((a, b) => a.payoutOrder - b.payoutOrder).map((m) => {
             const isCurrent = m.payoutOrder === currentRound;
+            const showMessage = isOrganizer || m.userId === organizerId;
             return (
               <div
                 key={m.userId}
@@ -56,6 +59,17 @@ export function MembersTab({ members, loading, currentRound, isOrganizer, onAddM
                   </p>
                 </div>
                 {isCurrent && <span style={{ color: 'var(--primary)', fontSize: 18 }}>🏆</span>}
+                {showMessage && (
+                  <button
+                    className="btn-outline"
+                    onClick={() => onMessageClick(m.userId, m.fullName)}
+                    style={{ width: 'auto', padding: 8, background: 'transparent', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', color: 'var(--text2)', display: 'flex', alignItems: 'center' }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                  </button>
+                )}
               </div>
             );
           })}

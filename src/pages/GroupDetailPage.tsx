@@ -7,6 +7,7 @@ import { MembersTab } from '../features/groups/components/MembersTab';
 import { HistoryTab } from '../features/groups/components/HistoryTab';
 import { PaymentInfoSheet } from '../features/groups/components/PaymentInfoSheet';
 import { AddMemberModal } from '../features/groups/components/AddMemberModal';
+import { ChatDrawer } from '../features/chat/components/ChatDrawer';
 import { GroupDetailSkeleton } from '../components/Skeleton';
 
 export function GroupDetailPage() {
@@ -15,6 +16,7 @@ export function GroupDetailPage() {
   const { user } = useAuthContext();
   const [showPaymentInfo, setShowPaymentInfo] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [chatTarget, setChatTarget] = useState<{ userId: string; userName: string } | null>(null);
 
   const {
     detail,
@@ -111,7 +113,9 @@ export function GroupDetailPage() {
           loading={loadingTab}
           currentRound={detail.currentRound}
           isOrganizer={isOrganizer}
+          organizerId={detail.organizerId}
           onAddMember={() => setShowAddMember(true)}
+          onMessageClick={(userId, userName) => setChatTarget({ userId, userName })}
         />
       )}
 
@@ -132,6 +136,15 @@ export function GroupDetailPage() {
           numberOfSlots={detail.numberOfSlots}
           onClose={() => setShowAddMember(false)}
           onAddMember={handleAddMember}
+        />
+      )}
+
+      {chatTarget && (
+        <ChatDrawer
+          groupId={id ?? ''}
+          receiverId={chatTarget.userId}
+          receiverName={chatTarget.userName}
+          onClose={() => setChatTarget(null)}
         />
       )}
     </div>
