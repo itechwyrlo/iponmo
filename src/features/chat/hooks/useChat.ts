@@ -3,6 +3,7 @@ import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 import type { HubConnection } from '@microsoft/signalr';
 import toast from 'react-hot-toast';
 import { useAuthContext } from '../../../context/AuthContext';
+import { useNotificationContext } from '../../../context/NotificationContext';
 import { getMessages, sendMessage as sendMessageService } from '../services/chatService';
 import type { Message, SendMessageRequest } from '../types/chat.types';
 
@@ -16,11 +17,14 @@ interface UseChatResult {
 }
 
 export function useChat(groupId: string, receiverId: string): UseChatResult {
-  const { token } = useAuthContext();
+  const { token, user } = useAuthContext();
+  const { addNotification } = useNotificationContext();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const connectionRef = useRef<HubConnection | null>(null);
+  const currentUserIdRef = useRef<string | undefined>(user?.userId);
+  currentUserIdRef.current = user?.userId;
 
   useEffect(() => {
     if (!token) return;
@@ -40,6 +44,18 @@ export function useChat(groupId: string, receiverId: string): UseChatResult {
     connection.on('ReceiveMessage', (msg: Message) => {
       if (msg.senderId === receiverId || msg.receiverId === receiverId) {
         setMessages((prev) => [...prev, msg]);
+        if (msg.receiverId === currentUserIdRef.current) {
+          addNotification({
+            id: crypto.randomUUID(),
+            type: 'new_message',
+            senderName: msg.senderName,
+            messagePreview: msg.text ?? 'Sent an image',
+            groupId: msg.groupId,
+            groupName: '',
+            receivedAt: msg.sentAt,
+            isRead: false,
+          });
+        }
       }
     });
 
@@ -58,7 +74,7 @@ export function useChat(groupId: string, receiverId: string): UseChatResult {
         connectionRef.current = null;
       }
     };
-  }, [token, groupId, receiverId]);
+  }, [token, groupId, receiverId, addNotification]);
 
   async function sendMessage(text: string | null, imageUrl: string | null): Promise<void> {
     if (!token) return;

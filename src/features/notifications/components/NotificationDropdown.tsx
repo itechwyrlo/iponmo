@@ -1,0 +1,126 @@
+import type { AppNotification } from '../types/notification.types';
+
+interface NotificationDropdownProps {
+  notifications: AppNotification[];
+  onNotificationClick: (notification: AppNotification) => void;
+  onMarkAllRead: () => void;
+  onClose: () => void;
+}
+
+function formatTimeAgo(isoString: string): string {
+  const diffMs = Date.now() - new Date(isoString).getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  if (diffSecs < 60) return 'just now';
+  const diffMins = Math.floor(diffSecs / 60);
+  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+}
+
+export function NotificationDropdown({
+  notifications,
+  onNotificationClick,
+  onMarkAllRead,
+  onClose,
+}: NotificationDropdownProps) {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: 'calc(100% + 8px)',
+        right: 0,
+        width: 320,
+        maxHeight: 400,
+        overflowY: 'auto',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 12,
+        boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+        zIndex: 1001,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '12px 16px',
+          borderBottom: '1px solid var(--border)',
+          position: 'sticky',
+          top: 0,
+          background: 'var(--surface)',
+        }}
+      >
+        <span style={{ fontWeight: 600, fontSize: 16 }}>Notifications</span>
+        <button
+          onClick={onMarkAllRead}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            color: 'var(--primary)',
+            fontSize: 13,
+            padding: 0,
+          }}
+        >
+          Mark all read
+        </button>
+      </div>
+
+      {notifications.length === 0 ? (
+        <div style={{ padding: 24, textAlign: 'center', color: 'var(--text2)', fontSize: 14 }}>
+          No notifications yet.
+        </div>
+      ) : (
+        notifications.map((n) => (
+          <div
+            key={n.id}
+            onClick={() => { onNotificationClick(n); onClose(); }}
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 10,
+              padding: '12px 16px',
+              cursor: 'pointer',
+              borderBottom: '1px solid var(--border)',
+              background: n.isRead ? 'transparent' : 'rgba(0,0,0,0.03)',
+            }}
+          >
+            <div
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: n.isRead ? 'transparent' : 'var(--primary)',
+                flexShrink: 0,
+                marginTop: 5,
+              }}
+            />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontWeight: 600, margin: 0, fontSize: 14, color: 'var(--text1)' }}>
+                {n.senderName}
+              </p>
+              <p
+                style={{
+                  margin: '2px 0',
+                  fontSize: 13,
+                  color: 'var(--text2)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {n.messagePreview}
+              </p>
+              <p style={{ margin: 0, fontSize: 11, color: 'var(--text2)' }}>
+                {formatTimeAgo(n.receivedAt)}
+              </p>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}

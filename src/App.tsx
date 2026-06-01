@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { MainLayout } from './pages/MainLayout';
 import InstallPrompt from './components/InstallPrompt';
@@ -16,6 +17,7 @@ export function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <NotificationProvider>
         <Suspense fallback={<div style={{ padding: 28, color: 'var(--text2)' }}>Loading...</div>}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
@@ -36,6 +38,7 @@ export function App() {
         </Suspense>
         <Toaster position="top-center" />
         <InstallPrompt />
+        </NotificationProvider>
       </AuthProvider>
     </BrowserRouter>
   );
