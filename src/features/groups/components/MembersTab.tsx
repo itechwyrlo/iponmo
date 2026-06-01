@@ -26,6 +26,27 @@ export function MembersTab({ members, loading, currentRound, isOrganizer, organi
         )}
       </div>
 
+      {!isOrganizer && !members.some((m) => m.userId === organizerId) && (
+        <div
+          className="card"
+          style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}
+        >
+          <div className="avatar" style={{ background: 'linear-gradient(135deg, var(--primary-dark), var(--primary))' }}>O</div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontWeight: 600 }}>Group Organizer</p>
+            <p style={{ fontSize: 12, color: 'var(--text2)' }}>Organizer</p>
+          </div>
+          <button
+            onClick={() => onMessageClick(organizerId, 'Group Organizer')}
+            style={{ width: 'auto', padding: 8, background: 'transparent', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', color: 'var(--text2)', display: 'flex', alignItems: 'center' }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {members.length === 0 ? (
         <EmptyState message="No members have been added yet." />
       ) : (
