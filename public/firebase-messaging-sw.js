@@ -16,8 +16,11 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
+  // Visible in DevTools → Application → Service Workers → Inspect
+  console.log('[SW] onBackgroundMessage received. Full payload:', JSON.stringify(payload));
   const title = payload.notification?.title ?? 'New message';
   const body = payload.notification?.body ?? '';
+  console.log('[SW] Showing OS notification — title:', title, '| body:', body, '| data:', JSON.stringify(payload.data));
   self.registration.showNotification(title, {
     body,
     icon: '/logo192.png',

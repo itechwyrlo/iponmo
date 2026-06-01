@@ -42,9 +42,11 @@ export function useChat(groupId: string, receiverId: string): UseChatResult {
       .build();
 
     connection.on('ReceiveMessage', (msg: Message) => {
+      console.log('[SignalR] ReceiveMessage — senderId:', msg.senderId, '| receiverId:', msg.receiverId, '| currentUserId:', currentUserIdRef.current, '| groupId:', msg.groupId);
       if (msg.senderId === receiverId || msg.receiverId === receiverId) {
         setMessages((prev) => [...prev, msg]);
         if (msg.receiverId === currentUserIdRef.current) {
+          console.log('[SignalR] Adding in-app notification for message from', msg.senderName);
           addNotification({
             id: crypto.randomUUID(),
             type: 'new_message',
@@ -55,7 +57,11 @@ export function useChat(groupId: string, receiverId: string): UseChatResult {
             receivedAt: msg.sentAt,
             isRead: false,
           });
+        } else {
+          console.log('[SignalR] Message is outbound (current user is sender) — no in-app notification added');
         }
+      } else {
+        console.log('[SignalR] Message ignored — not related to this conversation (receiverId:', receiverId, ')');
       }
     });
 

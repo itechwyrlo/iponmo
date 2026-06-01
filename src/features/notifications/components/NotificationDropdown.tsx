@@ -119,7 +119,7 @@ export function NotificationDropdown({
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontWeight: 600, margin: 0, fontSize: 14, color: 'var(--text)' }}>
-                  {n.senderName}
+                  {n.type === 'new_message' ? n.senderName : 'Payment Confirmed'}
                 </p>
                 <p
                   style={{
@@ -131,7 +131,9 @@ export function NotificationDropdown({
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {n.messagePreview}
+                  {n.type === 'new_message'
+                    ? n.messagePreview
+                    : `Round ${n.round} for "${n.groupName}"`}
                 </p>
                 <p style={{ margin: 0, fontSize: 11, color: 'var(--text2)' }}>
                   {formatTimeAgo(n.receivedAt)}

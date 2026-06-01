@@ -57,7 +57,9 @@ export function ProfilePage() {
 
   function handleNotificationClick(notification: AppNotification) {
     markAsRead(notification.id);
-    navigate(`/groups/${notification.groupId}`);
+    if (notification.type === 'new_message') {
+      navigate(`/groups/${notification.groupId}`);
+    }
     closeNotifications();
   }
 
