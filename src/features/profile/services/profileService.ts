@@ -14,6 +14,21 @@ export async function getProfile(token: string): Promise<ProfileResponse> {
   return response.json();
 }
 
+export async function uploadQrCode(token: string, file: File): Promise<ProfileResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await apiFetch(
+    `${BASE_URL}/api/profiles/qr-code`,
+    { method: 'POST', body: formData },
+    token
+  );
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Failed to upload QR code.' }));
+    throw new Error((error as { message?: string }).message ?? 'Failed to upload QR code.');
+  }
+  return response.json();
+}
+
 export async function updatePaymentDetails(
   token: string,
   data: UpdatePaymentDetailsRequest

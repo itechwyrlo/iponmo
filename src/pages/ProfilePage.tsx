@@ -1,8 +1,9 @@
+import { useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { useProfile } from '../features/profile/hooks/useProfile';
-import { useUpdatePayment } from '../features/profile/hooks/useUpdatePayment';
+import { useUploadQrCode } from '../features/profile/hooks/useUploadQrCode';
 import { Skeleton } from '../components/Skeleton';
 import { Spinner } from '../components/Spinner';
 
@@ -10,11 +11,8 @@ export function ProfilePage() {
   const { clearAuth } = useAuthContext();
   const navigate = useNavigate();
   const { profile, loading, error, refetch } = useProfile();
-  const {
-    gCashInput, setGCashInput,
-    mayaInput, setMayaInput,
-    saving, saveError, savePayment,
-  } = useUpdatePayment(profile?.gCashNumber ?? null, profile?.mayaNumber ?? null);
+  const { uploading, uploadError, uploadQrCode } = useUploadQrCode();
+  const qrInputRef = useRef<HTMLInputElement>(null);
 
   async function handleSignOut() {
     await clearAuth();
@@ -22,13 +20,16 @@ export function ProfilePage() {
     navigate('/login');
   }
 
-  async function handleSavePayment() {
+  async function handleQrUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
     try {
-      await savePayment();
-      toast.success('Payment details saved.');
+      await uploadQrCode(file);
+      toast.success('QR code uploaded.');
       refetch();
     } catch {
-      // saveError is displayed inline below the form
+      // uploadError displayed inline
     }
   }
 
@@ -99,7 +100,7 @@ export function ProfilePage() {
         </div>
 
         <div className="card">
-          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
             Member ID
           </p>
           <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 10 }}>
@@ -120,51 +121,49 @@ export function ProfilePage() {
 
         <div className="card">
           <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
-            Payment Accounts
+            Payment QR Code
           </p>
           <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>
-            Members will scan your QR or copy your number to send payments.
+            Members will scan your QR code to send payments.
           </p>
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <Skeleton height="46px" />
-              <Skeleton height="46px" />
+              <Skeleton height="200px" />
               <Skeleton height="46px" />
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-              <div className="input-group">
-                <label htmlFor="gcash-input">GCash Number</label>
-                <input
-                  id="gcash-input"
-                  type="text"
-                  placeholder="09XXXXXXXXX"
-                  value={gCashInput}
-                  onChange={(e) => setGCashInput(e.target.value)}
-                  disabled={saving}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {profile?.qrCodeUrl && (
+                <img
+                  src={profile.qrCodeUrl}
+                  alt="Payment QR Code"
+                  style={{
+                    width: '100%',
+                    maxWidth: 220,
+                    margin: '0 auto',
+                    display: 'block',
+                    borderRadius: 12,
+                    border: '1px solid var(--border)',
+                  }}
                 />
-              </div>
-              <div className="input-group">
-                <label htmlFor="maya-input">Maya Number</label>
-                <input
-                  id="maya-input"
-                  type="text"
-                  placeholder="09XXXXXXXXX"
-                  value={mayaInput}
-                  onChange={(e) => setMayaInput(e.target.value)}
-                  disabled={saving}
-                />
-              </div>
-              {saveError && (
-                <p style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 12 }}>{saveError}</p>
               )}
+              {uploadError && (
+                <p style={{ color: 'var(--danger)', fontSize: 13 }}>{uploadError}</p>
+              )}
+              <input
+                ref={qrInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleQrUpload}
+              />
               <button
                 className="btn btn-primary"
-                onClick={handleSavePayment}
-                disabled={saving}
+                onClick={() => qrInputRef.current?.click()}
+                disabled={uploading}
               >
-                {saving && <Spinner />}
-                Save Payment Details
+                {uploading && <Spinner />}
+                {profile?.qrCodeUrl ? 'Replace QR Code' : 'Upload QR Code'}
               </button>
             </div>
           )}

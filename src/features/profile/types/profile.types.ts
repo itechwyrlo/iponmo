@@ -5,6 +5,7 @@ export interface ProfileResponse {
   role: string;
   gCashNumber: string | null;
   mayaNumber: string | null;
+  qrCodeUrl: string | null;
 }
 
 export interface UpdatePaymentDetailsRequest {
