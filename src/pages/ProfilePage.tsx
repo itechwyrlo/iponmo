@@ -2,17 +2,34 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { useProfile } from '../features/profile/hooks/useProfile';
+import { useUpdatePayment } from '../features/profile/hooks/useUpdatePayment';
 import { Skeleton } from '../components/Skeleton';
+import { Spinner } from '../components/Spinner';
 
 export function ProfilePage() {
   const { clearAuth } = useAuthContext();
   const navigate = useNavigate();
-  const { profile, loading, error } = useProfile();
+  const { profile, loading, error, refetch } = useProfile();
+  const {
+    gCashInput, setGCashInput,
+    mayaInput, setMayaInput,
+    saving, saveError, savePayment,
+  } = useUpdatePayment(profile?.gCashNumber ?? null, profile?.mayaNumber ?? null);
 
   async function handleSignOut() {
     await clearAuth();
     toast.success('Signed out.');
     navigate('/login');
+  }
+
+  async function handleSavePayment() {
+    try {
+      await savePayment();
+      toast.success('Payment details saved.');
+      refetch();
+    } catch {
+      // saveError is displayed inline below the form
+    }
   }
 
   function handleCopyId() {
@@ -102,28 +119,55 @@ export function ProfilePage() {
         </div>
 
         <div className="card">
-          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
             Payment Accounts
           </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div>
-              <p style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>GCash</p>
-              {loading ? <div style={{ marginTop: 4 }}><Skeleton height="18px" width="50%" /></div> : (
-                <p style={{ fontSize: 15, fontWeight: 600, marginTop: 2 }}>
-                  {profile?.gCashNumber ?? <span style={{ color: 'var(--text3)', fontWeight: 400 }}>Not set</span>}
-                </p>
-              )}
+          <p style={{ fontSize: 13, color: 'var(--text2)', marginBottom: 16 }}>
+            Members will scan your QR or copy your number to send payments.
+          </p>
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <Skeleton height="46px" />
+              <Skeleton height="46px" />
+              <Skeleton height="46px" />
             </div>
-            <div style={{ height: 1, background: 'var(--border)' }} />
-            <div>
-              <p style={{ fontSize: 11, color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Maya</p>
-              {loading ? <div style={{ marginTop: 4 }}><Skeleton height="18px" width="50%" /></div> : (
-                <p style={{ fontSize: 15, fontWeight: 600, marginTop: 2 }}>
-                  {profile?.mayaNumber ?? <span style={{ color: 'var(--text3)', fontWeight: 400 }}>Not set</span>}
-                </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              <div className="input-group">
+                <label htmlFor="gcash-input">GCash Number</label>
+                <input
+                  id="gcash-input"
+                  type="text"
+                  placeholder="09XXXXXXXXX"
+                  value={gCashInput}
+                  onChange={(e) => setGCashInput(e.target.value)}
+                  disabled={saving}
+                />
+              </div>
+              <div className="input-group">
+                <label htmlFor="maya-input">Maya Number</label>
+                <input
+                  id="maya-input"
+                  type="text"
+                  placeholder="09XXXXXXXXX"
+                  value={mayaInput}
+                  onChange={(e) => setMayaInput(e.target.value)}
+                  disabled={saving}
+                />
+              </div>
+              {saveError && (
+                <p style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 12 }}>{saveError}</p>
               )}
+              <button
+                className="btn btn-primary"
+                onClick={handleSavePayment}
+                disabled={saving}
+              >
+                {saving && <Spinner />}
+                Save Payment Details
+              </button>
             </div>
-          </div>
+          )}
         </div>
 
         <button className="btn btn-danger" onClick={handleSignOut}>

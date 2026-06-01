@@ -6,3 +6,8 @@ export interface ProfileResponse {
   gCashNumber: string | null;
   mayaNumber: string | null;
 }
+
+export interface UpdatePaymentDetailsRequest {
+  gCashNumber: string | null;
+  mayaNumber: string | null;
+}
