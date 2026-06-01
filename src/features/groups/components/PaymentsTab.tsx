@@ -33,7 +33,7 @@ export function PaymentsTab({
             style={{ width: 'auto', padding: '7px 14px', fontSize: 13 }}
             onClick={onPayClick}
           >
-            Pay via GCash/Maya
+            Scan to Pay
           </button>
         )}
       </div>
