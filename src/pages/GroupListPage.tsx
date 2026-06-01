@@ -40,17 +40,14 @@ export function GroupListPage() {
   return (
     <div className="screen">
       <div className="page-header" style={{ paddingBottom: 0 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div className="avatar" style={{ width: 44, height: 44, fontSize: 16, flexShrink: 0 }}>
               {user?.email.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <p style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 600 }}>
-                Kumusta, {user?.email} 👋
-              </p>
-              <h1 style={{ fontSize: 26, marginTop: 2 }}>My Groups</h1>
-            </div>
+            <p style={{ fontSize: 13, color: 'var(--text2)', fontWeight: 600 }}>
+              Kumusta, {user?.email} 👋
+            </p>
           </div>
           <div ref={containerRef}>
             <NotificationBell unreadCount={unreadCount} onClick={toggleNotifications} />
@@ -65,6 +62,7 @@ export function GroupListPage() {
             )}
           </div>
         </div>
+        <h1 style={{ fontSize: 26, marginTop: 16, marginBottom: 4 }}>My Groups</h1>
 
         <div className="stat-row" style={{ marginTop: 20 }}>
           <div className="stat-box">
