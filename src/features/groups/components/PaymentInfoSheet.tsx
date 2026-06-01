@@ -1,16 +1,32 @@
+import { useState } from 'react';
 import toast from 'react-hot-toast';
-import type { AuthUser } from '../../auth/types/auth.types';
+import { QrCodeDisplay } from './QrCodeDisplay';
+import { EmptyState } from '../../../components/EmptyState';
 
 interface PaymentInfoSheetProps {
-  user: AuthUser;
+  organizerGCash: string | null;
+  organizerMaya: string | null;
   contributionAmount: number;
   onClose: () => void;
 }
 
-export function PaymentInfoSheet({ user, contributionAmount, onClose }: PaymentInfoSheetProps) {
+type QrTab = 'static' | 'dynamic';
+
+export function PaymentInfoSheet({
+  organizerGCash,
+  organizerMaya,
+  contributionAmount,
+  onClose,
+}: PaymentInfoSheetProps) {
+  const [qrTab, setQrTab] = useState<QrTab>('static');
+
   function copyToClipboard(value: string, label: string) {
     navigator.clipboard.writeText(value);
     toast.success(`${label} number copied.`);
+  }
+
+  function buildDynamicPayload(number: string): string {
+    return `amount=${contributionAmount.toFixed(2)}|recipient=${number}`;
   }
 
   return (
@@ -22,39 +38,71 @@ export function PaymentInfoSheet({ user, contributionAmount, onClose }: PaymentI
           Send ₱{contributionAmount.toLocaleString()} to the organizer then wait for confirmation.
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div className="payment-method">
-            <div className="payment-icon gcash-icon">GC</div>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontWeight: 700, fontSize: 14 }}>GCash</p>
-              <p style={{ fontSize: 13, color: 'var(--text2)' }}>{user.userId}</p>
-            </div>
+        <div className="tab-group" style={{ marginBottom: 20 }}>
+          {(['static', 'dynamic'] as const).map((tab) => (
             <button
-              className="btn btn-outline"
-              style={{ width: 'auto', padding: '8px 12px', fontSize: 13 }}
-              onClick={() => copyToClipboard(user.userId, 'GCash')}
+              key={tab}
+              className={`tab-pill ${qrTab === tab ? 'active' : ''}`}
+              onClick={() => setQrTab(tab)}
             >
-              Copy
+              {tab === 'static' ? 'Static QR' : 'Dynamic QR'}
             </button>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <div className="payment-icon gcash-icon" style={{ width: 28, height: 28, fontSize: 10 }}>GC</div>
+              <p style={{ fontWeight: 700, fontSize: 14 }}>GCash</p>
+            </div>
+            {organizerGCash ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                <QrCodeDisplay
+                  value={qrTab === 'static' ? organizerGCash : buildDynamicPayload(organizerGCash)}
+                  label={organizerGCash}
+                />
+                <button
+                  className="btn btn-outline"
+                  style={{ padding: '8px 16px', fontSize: 13 }}
+                  onClick={() => copyToClipboard(organizerGCash, 'GCash')}
+                >
+                  Copy Number
+                </button>
+              </div>
+            ) : (
+              <EmptyState message="No GCash number on file." />
+            )}
           </div>
 
-          <div className="payment-method">
-            <div className="payment-icon maya-icon">MY</div>
-            <div style={{ flex: 1 }}>
+          <div className="divider" />
+
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <div className="payment-icon maya-icon" style={{ width: 28, height: 28, fontSize: 10 }}>MY</div>
               <p style={{ fontWeight: 700, fontSize: 14 }}>Maya</p>
-              <p style={{ fontSize: 13, color: 'var(--text2)' }}>{user.userId}</p>
             </div>
-            <button
-              className="btn btn-outline"
-              style={{ width: 'auto', padding: '8px 12px', fontSize: 13 }}
-              onClick={() => copyToClipboard(user.userId, 'Maya')}
-            >
-              Copy
-            </button>
+            {organizerMaya ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                <QrCodeDisplay
+                  value={qrTab === 'static' ? organizerMaya : buildDynamicPayload(organizerMaya)}
+                  label={organizerMaya}
+                />
+                <button
+                  className="btn btn-outline"
+                  style={{ padding: '8px 16px', fontSize: 13 }}
+                  onClick={() => copyToClipboard(organizerMaya, 'Maya')}
+                >
+                  Copy Number
+                </button>
+              </div>
+            ) : (
+              <EmptyState message="No Maya number on file." />
+            )}
           </div>
         </div>
 
-        <div style={{ marginTop: 20 }}>
+        <div style={{ marginTop: 24 }}>
           <button className="btn btn-outline" onClick={onClose}>Close</button>
         </div>
       </div>

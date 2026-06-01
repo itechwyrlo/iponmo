@@ -119,9 +119,10 @@ export function GroupDetailPage() {
         <HistoryTab history={history} loading={loadingTab} />
       )}
 
-      {showPaymentInfo && user && (
+      {showPaymentInfo && (
         <PaymentInfoSheet
-          user={user}
+          organizerGCash={detail.organizerGCash}
+          organizerMaya={detail.organizerMaya}
           contributionAmount={detail.contributionAmount}
           onClose={() => setShowPaymentInfo(false)}
         />
