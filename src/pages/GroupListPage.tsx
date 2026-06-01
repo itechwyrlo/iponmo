@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
+import { useNotificationContext } from '../context/NotificationContext';
 import { useGroups } from '../features/groups/hooks/useGroups';
 import { useNotificationBell } from '../features/notifications/hooks/useNotificationBell';
 import { GroupCard } from '../features/groups/components/GroupCard';
 import { CreateGroupModal } from '../features/groups/components/CreateGroupModal';
 import { NotificationBell } from '../features/notifications/components/NotificationBell';
 import { NotificationDropdown } from '../features/notifications/components/NotificationDropdown';
+import { NotificationPermissionBanner } from '../features/notifications/components/NotificationPermissionBanner';
 import { GroupCardSkeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
 import type { AppNotification } from '../features/notifications/types/notification.types';
@@ -14,8 +16,10 @@ import type { AppNotification } from '../features/notifications/types/notificati
 export function GroupListPage() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
+  const { permissionStatus, requestNotificationPermission } = useNotificationContext();
   const { groups, loading, error, refetch } = useGroups();
   const [showCreate, setShowCreate] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   const {
     notifications,
     unreadCount,
@@ -85,6 +89,13 @@ export function GroupListPage() {
       <div style={{ height: 20 }} />
 
       <div className="scroll-container">
+        {permissionStatus === 'default' && !bannerDismissed && (
+          <NotificationPermissionBanner
+            onEnable={() => { void requestNotificationPermission(); }}
+            onDismiss={() => setBannerDismissed(true)}
+          />
+        )}
+
         {loading && (
           <>
             <GroupCardSkeleton />

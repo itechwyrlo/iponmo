@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { initializeApp, getApps } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
@@ -31,6 +31,8 @@ interface NotificationContextValue {
   addNotification: (notification: AppNotification) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
+  permissionStatus: NotificationPermission;
+  requestNotificationPermission: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
@@ -38,58 +40,66 @@ const NotificationContext = createContext<NotificationContextValue | null>(null)
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { token } = useAuthContext();
   const { notifications, unreadCount, addNotification, markAsRead, markAllAsRead } = useNotifications();
+  const [permissionStatus, setPermissionStatus] = useState<NotificationPermission>(
+    'Notification' in window ? Notification.permission : 'denied'
+  );
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  const setupFcm = useCallback(async (authToken: string): Promise<void> => {
+    if (unsubscribeRef.current) return;
+    const messaging = getOrInitMessaging();
+    const fcmToken = await getToken(messaging, {
+      vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+    });
+    await saveFcmToken(fcmToken, authToken).catch(() => null);
+    unsubscribeRef.current = onMessage(messaging, (payload) => {
+      const { data, notification: n } = payload;
+      if (!data || data['type'] !== 'new_message') return;
+      addNotification({
+        id: crypto.randomUUID(),
+        type: 'new_message',
+        senderName: n?.title ?? 'Unknown',
+        messagePreview: n?.body ?? '',
+        groupId: data['groupId'] ?? '',
+        groupName: '',
+        receivedAt: new Date().toISOString(),
+        isRead: false,
+      });
+    });
+  }, [addNotification]);
 
   useEffect(() => {
-    if (!token) return;
-    if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
-
-    let cancelled = false;
-    let unsubscribeOnMessage: (() => void) | null = null;
-
-    (async () => {
-      try {
-        const permission = await Notification.requestPermission();
-        if (cancelled || permission !== 'granted') return;
-
-        const messaging = getOrInitMessaging();
-        const fcmToken = await getToken(messaging, {
-          vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
-        });
-
-        if (cancelled) return;
-
-        await saveFcmToken(fcmToken, token).catch(() => null);
-
-        if (cancelled) return;
-
-        unsubscribeOnMessage = onMessage(messaging, (payload) => {
-          const { data, notification: n } = payload;
-          if (!data || data['type'] !== 'new_message') return;
-          addNotification({
-            id: crypto.randomUUID(),
-            type: 'new_message',
-            senderName: n?.title ?? 'Unknown',
-            messagePreview: n?.body ?? '',
-            groupId: data['groupId'] ?? '',
-            groupName: '',
-            receivedAt: new Date().toISOString(),
-            isRead: false,
-          });
-        });
-      } catch {
-        // Notification registration failed — continue silently
+    const cleanup = () => {
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+        unsubscribeRef.current = null;
       }
-    })();
-
-    return () => {
-      cancelled = true;
-      if (unsubscribeOnMessage) unsubscribeOnMessage();
     };
-  }, [token, addNotification]);
+
+    if (!token || !('Notification' in window) || !('serviceWorker' in navigator)) {
+      return cleanup;
+    }
+
+    if (Notification.permission === 'granted') {
+      setupFcm(token).catch(() => null);
+    }
+
+    return cleanup;
+  }, [token, setupFcm]);
+
+  const requestNotificationPermission = useCallback(async (): Promise<void> => {
+    if (!token || !('Notification' in window) || !('serviceWorker' in navigator)) return;
+
+    const permission = await Notification.requestPermission();
+    setPermissionStatus(permission);
+
+    if (permission !== 'granted') return;
+    await setupFcm(token).catch(() => null);
+  }, [token, setupFcm]);
 
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, addNotification, markAsRead, markAllAsRead }}
+      value={{ notifications, unreadCount, addNotification, markAsRead, markAllAsRead, permissionStatus, requestNotificationPermission }}
     >
       {children}
     </NotificationContext.Provider>
