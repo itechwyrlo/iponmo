@@ -25,6 +25,7 @@ export function GroupListPage() {
     toggleNotifications,
     closeNotifications,
     containerRef,
+    dropdownPosition,
   } = useNotificationBell();
 
   const totalContributed = groups.reduce((sum, g) => sum + g.paidCount * g.contributionAmount, 0);
@@ -47,7 +48,7 @@ export function GroupListPage() {
             <h1 style={{ fontSize: 26, marginTop: 2 }}>My Groups</h1>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div ref={containerRef} style={{ position: 'relative' }}>
+            <div ref={containerRef}>
               <NotificationBell unreadCount={unreadCount} onClick={toggleNotifications} />
               {showNotifications && (
                 <NotificationDropdown
@@ -55,6 +56,7 @@ export function GroupListPage() {
                   onNotificationClick={handleNotificationClick}
                   onMarkAllRead={markAllAsRead}
                   onClose={closeNotifications}
+                  position={dropdownPosition}
                 />
               )}
             </div>

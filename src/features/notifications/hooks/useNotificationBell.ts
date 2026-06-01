@@ -1,7 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { useNotificationContext } from '../../../context/NotificationContext';
 import type { AppNotification } from '../types/notification.types';
+
+interface DropdownPosition {
+  top: number;
+  right: number;
+}
 
 interface UseNotificationBellResult {
   notifications: AppNotification[];
@@ -12,23 +17,25 @@ interface UseNotificationBellResult {
   toggleNotifications: () => void;
   closeNotifications: () => void;
   containerRef: RefObject<HTMLDivElement>;
+  dropdownPosition: DropdownPosition;
 }
 
 export function useNotificationBell(): UseNotificationBellResult {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotificationContext();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState<DropdownPosition>({ top: 0, right: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!showNotifications) return;
-    function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setShowNotifications(false);
-      }
+  function toggleNotifications() {
+    if (!showNotifications && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: Math.round(rect.bottom + 8),
+        right: Math.max(0, Math.round(window.innerWidth - rect.right)),
+      });
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showNotifications]);
+    setShowNotifications((prev) => !prev);
+  }
 
   return {
     notifications,
@@ -36,8 +43,9 @@ export function useNotificationBell(): UseNotificationBellResult {
     markAsRead,
     markAllAsRead,
     showNotifications,
-    toggleNotifications: () => setShowNotifications((prev) => !prev),
+    toggleNotifications,
     closeNotifications: () => setShowNotifications(false),
     containerRef,
+    dropdownPosition,
   };
 }

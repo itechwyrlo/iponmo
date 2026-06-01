@@ -30,6 +30,7 @@ export function GroupDetailPage() {
     toggleNotifications,
     closeNotifications,
     containerRef,
+    dropdownPosition,
   } = useNotificationBell();
 
   const {
@@ -85,7 +86,7 @@ export function GroupDetailPage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {isOrganizer && <span className="badge badge-warning">Organizer</span>}
-            <div ref={containerRef} style={{ position: 'relative' }}>
+            <div ref={containerRef}>
               <NotificationBell unreadCount={unreadCount} onClick={toggleNotifications} />
               {showNotifications && (
                 <NotificationDropdown
@@ -93,6 +94,7 @@ export function GroupDetailPage() {
                   onNotificationClick={handleNotificationClick}
                   onMarkAllRead={markAllAsRead}
                   onClose={closeNotifications}
+                  position={dropdownPosition}
                 />
               )}
             </div>

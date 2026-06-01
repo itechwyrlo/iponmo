@@ -26,6 +26,7 @@ export function ProfilePage() {
     toggleNotifications,
     closeNotifications,
     containerRef,
+    dropdownPosition,
   } = useNotificationBell();
 
   async function handleSignOut() {
@@ -68,7 +69,7 @@ export function ProfilePage() {
             <h1>Profile</h1>
             <p>Manage your account details.</p>
           </div>
-          <div ref={containerRef} style={{ position: 'relative' }}>
+          <div ref={containerRef}>
             <NotificationBell unreadCount={unreadCount} onClick={toggleNotifications} />
             {showNotifications && (
               <NotificationDropdown
@@ -76,6 +77,7 @@ export function ProfilePage() {
                 onNotificationClick={handleNotificationClick}
                 onMarkAllRead={markAllAsRead}
                 onClose={closeNotifications}
+                position={dropdownPosition}
               />
             )}
           </div>
