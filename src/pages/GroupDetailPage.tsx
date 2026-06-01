@@ -2,13 +2,17 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { useGroupDetail } from '../features/groups/hooks/useGroupDetail';
+import { useNotificationBell } from '../features/notifications/hooks/useNotificationBell';
 import { PaymentsTab } from '../features/groups/components/PaymentsTab';
 import { MembersTab } from '../features/groups/components/MembersTab';
 import { HistoryTab } from '../features/groups/components/HistoryTab';
 import { PaymentInfoSheet } from '../features/groups/components/PaymentInfoSheet';
 import { AddMemberModal } from '../features/groups/components/AddMemberModal';
 import { ChatDrawer } from '../features/chat/components/ChatDrawer';
+import { NotificationBell } from '../features/notifications/components/NotificationBell';
+import { NotificationDropdown } from '../features/notifications/components/NotificationDropdown';
 import { GroupDetailSkeleton } from '../components/Skeleton';
+import type { AppNotification } from '../features/notifications/types/notification.types';
 
 export function GroupDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +21,16 @@ export function GroupDetailPage() {
   const [showPaymentInfo, setShowPaymentInfo] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
   const [chatTarget, setChatTarget] = useState<{ userId: string; userName: string } | null>(null);
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    showNotifications,
+    toggleNotifications,
+    closeNotifications,
+    containerRef,
+  } = useNotificationBell();
 
   const {
     detail,
@@ -46,6 +60,12 @@ export function GroupDetailPage() {
 
   const isOrganizer = detail.organizerId === user?.userId;
 
+  function handleNotificationClick(notification: AppNotification) {
+    markAsRead(notification.id);
+    navigate(`/groups/${notification.groupId}`);
+    closeNotifications();
+  }
+
   return (
     <div className="screen">
       <div className="page-header">
@@ -63,7 +83,20 @@ export function GroupDetailPage() {
               ₱{detail.contributionAmount.toLocaleString()} / {detail.schedule}
             </p>
           </div>
-          {isOrganizer && <span className="badge badge-warning">Organizer</span>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {isOrganizer && <span className="badge badge-warning">Organizer</span>}
+            <div ref={containerRef} style={{ position: 'relative' }}>
+              <NotificationBell unreadCount={unreadCount} onClick={toggleNotifications} />
+              {showNotifications && (
+                <NotificationDropdown
+                  notifications={notifications}
+                  onNotificationClick={handleNotificationClick}
+                  onMarkAllRead={markAllAsRead}
+                  onClose={closeNotifications}
+                />
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="stat-row" style={{ marginTop: 16 }}>

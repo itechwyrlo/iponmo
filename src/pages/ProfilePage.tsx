@@ -4,8 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { useProfile } from '../features/profile/hooks/useProfile';
 import { useUploadQrCode } from '../features/profile/hooks/useUploadQrCode';
+import { useNotificationBell } from '../features/notifications/hooks/useNotificationBell';
+import { NotificationBell } from '../features/notifications/components/NotificationBell';
+import { NotificationDropdown } from '../features/notifications/components/NotificationDropdown';
 import { Skeleton } from '../components/Skeleton';
 import { Spinner } from '../components/Spinner';
+import type { AppNotification } from '../features/notifications/types/notification.types';
 
 export function ProfilePage() {
   const { clearAuth } = useAuthContext();
@@ -13,6 +17,16 @@ export function ProfilePage() {
   const { profile, loading, error, refetch } = useProfile();
   const { uploading, uploadError, uploadQrCode } = useUploadQrCode();
   const qrInputRef = useRef<HTMLInputElement>(null);
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    showNotifications,
+    toggleNotifications,
+    closeNotifications,
+    containerRef,
+  } = useNotificationBell();
 
   async function handleSignOut() {
     await clearAuth();
@@ -40,11 +54,32 @@ export function ProfilePage() {
     });
   }
 
+  function handleNotificationClick(notification: AppNotification) {
+    markAsRead(notification.id);
+    navigate(`/groups/${notification.groupId}`);
+    closeNotifications();
+  }
+
   return (
     <div className="screen">
       <div className="page-header">
-        <h1>Profile</h1>
-        <p>Manage your account details.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1>Profile</h1>
+            <p>Manage your account details.</p>
+          </div>
+          <div ref={containerRef} style={{ position: 'relative' }}>
+            <NotificationBell unreadCount={unreadCount} onClick={toggleNotifications} />
+            {showNotifications && (
+              <NotificationDropdown
+                notifications={notifications}
+                onNotificationClick={handleNotificationClick}
+                onMarkAllRead={markAllAsRead}
+                onClose={closeNotifications}
+              />
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="scroll-container">

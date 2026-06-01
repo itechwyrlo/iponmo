@@ -2,19 +2,39 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { useGroups } from '../features/groups/hooks/useGroups';
+import { useNotificationBell } from '../features/notifications/hooks/useNotificationBell';
 import { GroupCard } from '../features/groups/components/GroupCard';
 import { CreateGroupModal } from '../features/groups/components/CreateGroupModal';
+import { NotificationBell } from '../features/notifications/components/NotificationBell';
+import { NotificationDropdown } from '../features/notifications/components/NotificationDropdown';
 import { GroupCardSkeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
+import type { AppNotification } from '../features/notifications/types/notification.types';
 
 export function GroupListPage() {
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const { groups, loading, error, refetch } = useGroups();
   const [showCreate, setShowCreate] = useState(false);
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    showNotifications,
+    toggleNotifications,
+    closeNotifications,
+    containerRef,
+  } = useNotificationBell();
 
   const totalContributed = groups.reduce((sum, g) => sum + g.paidCount * g.contributionAmount, 0);
   const pendingCount = groups.filter((g) => !g.myPaymentStatus).length;
+
+  function handleNotificationClick(notification: AppNotification) {
+    markAsRead(notification.id);
+    navigate(`/groups/${notification.groupId}`);
+    closeNotifications();
+  }
 
   return (
     <div className="screen">
@@ -26,8 +46,21 @@ export function GroupListPage() {
             </p>
             <h1 style={{ fontSize: 26, marginTop: 2 }}>My Groups</h1>
           </div>
-          <div className="avatar" style={{ width: 44, height: 44, fontSize: 16 }}>
-            {user?.email.charAt(0).toUpperCase()}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div ref={containerRef} style={{ position: 'relative' }}>
+              <NotificationBell unreadCount={unreadCount} onClick={toggleNotifications} />
+              {showNotifications && (
+                <NotificationDropdown
+                  notifications={notifications}
+                  onNotificationClick={handleNotificationClick}
+                  onMarkAllRead={markAllAsRead}
+                  onClose={closeNotifications}
+                />
+              )}
+            </div>
+            <div className="avatar" style={{ width: 44, height: 44, fontSize: 16 }}>
+              {user?.email.charAt(0).toUpperCase()}
+            </div>
           </div>
         </div>
 
