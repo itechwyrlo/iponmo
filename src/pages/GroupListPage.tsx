@@ -11,7 +11,7 @@ import { NotificationDropdown } from '../features/notifications/components/Notif
 import { NotificationPermissionBanner } from '../features/notifications/components/NotificationPermissionBanner';
 import { GroupCardSkeleton } from '../components/Skeleton';
 import { EmptyState } from '../components/EmptyState';
-import type { AppNotification } from '../features/notifications/types/notification.types';
+import type { Notification } from '../features/notifications/types/notification.types';
 
 export function GroupListPage() {
   const navigate = useNavigate();
@@ -35,10 +35,10 @@ export function GroupListPage() {
   const totalContributed = groups.reduce((sum, g) => sum + g.paidCount * g.contributionAmount, 0);
   const pendingCount = groups.filter((g) => !g.myPaymentStatus).length;
 
-  function handleNotificationClick(notification: AppNotification) {
+  function handleNotificationClick(notification: Notification) {
     markAsRead(notification.id);
-    if (notification.type === 'new_message') {
-      navigate(`/groups/${notification.groupId}`);
+    if (notification.type === 'NewMessage') {
+      navigate(`/groups/${notification.referenceId}`);
     }
     closeNotifications();
   }

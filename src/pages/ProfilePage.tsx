@@ -9,7 +9,7 @@ import { NotificationBell } from '../features/notifications/components/Notificat
 import { NotificationDropdown } from '../features/notifications/components/NotificationDropdown';
 import { Skeleton } from '../components/Skeleton';
 import { Spinner } from '../components/Spinner';
-import type { AppNotification } from '../features/notifications/types/notification.types';
+import type { Notification } from '../features/notifications/types/notification.types';
 
 export function ProfilePage() {
   const { clearAuth } = useAuthContext();
@@ -55,10 +55,10 @@ export function ProfilePage() {
     });
   }
 
-  function handleNotificationClick(notification: AppNotification) {
+  function handleNotificationClick(notification: Notification) {
     markAsRead(notification.id);
-    if (notification.type === 'new_message') {
-      navigate(`/groups/${notification.groupId}`);
+    if (notification.type === 'NewMessage') {
+      navigate(`/groups/${notification.referenceId}`);
     }
     closeNotifications();
   }

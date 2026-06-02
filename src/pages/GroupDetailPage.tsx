@@ -12,7 +12,7 @@ import { ChatDrawer } from '../features/chat/components/ChatDrawer';
 import { NotificationBell } from '../features/notifications/components/NotificationBell';
 import { NotificationDropdown } from '../features/notifications/components/NotificationDropdown';
 import { GroupDetailSkeleton } from '../components/Skeleton';
-import type { AppNotification } from '../features/notifications/types/notification.types';
+import type { Notification } from '../features/notifications/types/notification.types';
 
 export function GroupDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -61,10 +61,10 @@ export function GroupDetailPage() {
 
   const isOrganizer = detail.organizerId === user?.userId;
 
-  function handleNotificationClick(notification: AppNotification) {
+  function handleNotificationClick(notification: Notification) {
     markAsRead(notification.id);
-    if (notification.type === 'new_message') {
-      navigate(`/groups/${notification.groupId}`);
+    if (notification.type === 'NewMessage') {
+      navigate(`/groups/${notification.referenceId}`);
     }
     closeNotifications();
   }

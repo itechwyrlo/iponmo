@@ -1,21 +1,11 @@
-interface BaseNotification {
+export type NotificationType = 'NewMessage' | 'PaymentMarkedAsPaid';
+
+export interface Notification {
   id: string;
-  receivedAt: string;
+  type: NotificationType;
+  title: string;
+  body: string;
   isRead: boolean;
+  createdAt: string;
+  referenceId: string;
 }
-
-export interface MessageNotification extends BaseNotification {
-  type: 'new_message';
-  senderName: string;
-  messagePreview: string;
-  groupId: string;
-  groupName: string;
-}
-
-export interface PaymentNotification extends BaseNotification {
-  type: 'payment_confirmed';
-  groupName: string;
-  round: number;
-}
-
-export type AppNotification = MessageNotification | PaymentNotification;

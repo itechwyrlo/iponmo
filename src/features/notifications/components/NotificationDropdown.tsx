@@ -1,4 +1,4 @@
-import type { AppNotification } from '../types/notification.types';
+import type { Notification } from '../types/notification.types';
 
 interface DropdownPosition {
   top: number;
@@ -6,8 +6,8 @@ interface DropdownPosition {
 }
 
 interface NotificationDropdownProps {
-  notifications: AppNotification[];
-  onNotificationClick: (notification: AppNotification) => void;
+  notifications: Notification[];
+  onNotificationClick: (notification: Notification) => void;
   onMarkAllRead: () => void;
   onClose: () => void;
   position: DropdownPosition;
@@ -119,7 +119,7 @@ export function NotificationDropdown({
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontWeight: 600, margin: 0, fontSize: 14, color: 'var(--text)' }}>
-                  {n.type === 'new_message' ? n.senderName : 'Payment Confirmed'}
+                  {n.title}
                 </p>
                 <p
                   style={{
@@ -131,12 +131,10 @@ export function NotificationDropdown({
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {n.type === 'new_message'
-                    ? n.messagePreview
-                    : `Round ${n.round} for "${n.groupName}"`}
+                  {n.body}
                 </p>
                 <p style={{ margin: 0, fontSize: 11, color: 'var(--text2)' }}>
-                  {formatTimeAgo(n.receivedAt)}
+                  {formatTimeAgo(n.createdAt)}
                 </p>
               </div>
             </div>

@@ -3,11 +3,8 @@ import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 import type { HubConnection } from '@microsoft/signalr';
 import toast from 'react-hot-toast';
 import { useAuthContext } from '../../../context/AuthContext';
-import { useNotificationContext } from '../../../context/NotificationContext';
 import { getMessages, sendMessage as sendMessageService } from '../services/chatService';
 import type { Message, SendMessageRequest } from '../types/chat.types';
-
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 interface UseChatResult {
   messages: Message[];
@@ -18,7 +15,6 @@ interface UseChatResult {
 
 export function useChat(groupId: string, receiverId: string): UseChatResult {
   const { token, user } = useAuthContext();
-  const { addNotification } = useNotificationContext();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -36,7 +32,7 @@ export function useChat(groupId: string, receiverId: string): UseChatResult {
       .finally(() => { if (!cancelled) setLoading(false); });
 
     const connection = new HubConnectionBuilder()
-      .withUrl(`${BASE_URL}/hubs/chat?access_token=${token}`)
+      .withUrl(`${import.meta.env.VITE_SIGNALR_HUB_URL}?access_token=${token}`)
       .configureLogging(LogLevel.Warning)
       .withAutomaticReconnect()
       .build();
@@ -45,21 +41,6 @@ export function useChat(groupId: string, receiverId: string): UseChatResult {
       console.log('[SignalR] ReceiveMessage — senderId:', msg.senderId, '| receiverId:', msg.receiverId, '| currentUserId:', currentUserIdRef.current, '| groupId:', msg.groupId);
       if (msg.senderId === receiverId || msg.receiverId === receiverId) {
         setMessages((prev) => [...prev, msg]);
-        if (msg.receiverId === currentUserIdRef.current) {
-          console.log('[SignalR] Adding in-app notification for message from', msg.senderName);
-          addNotification({
-            id: crypto.randomUUID(),
-            type: 'new_message',
-            senderName: msg.senderName,
-            messagePreview: msg.text ?? 'Sent an image',
-            groupId: msg.groupId,
-            groupName: '',
-            receivedAt: msg.sentAt,
-            isRead: false,
-          });
-        } else {
-          console.log('[SignalR] Message is outbound (current user is sender) — no in-app notification added');
-        }
       } else {
         console.log('[SignalR] Message ignored — not related to this conversation (receiverId:', receiverId, ')');
       }
@@ -80,7 +61,7 @@ export function useChat(groupId: string, receiverId: string): UseChatResult {
         connectionRef.current = null;
       }
     };
-  }, [token, groupId, receiverId, addNotification]);
+  }, [token, groupId, receiverId]);
 
   async function sendMessage(text: string | null, imageUrl: string | null): Promise<void> {
     if (!token) return;

@@ -3,15 +3,21 @@ import type { ReactNode } from 'react';
 import { initializeApp, getApps } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import type { Messaging } from 'firebase/messaging';
+import { HubConnectionBuilder } from '@microsoft/signalr';
 import { useAuthContext } from './AuthContext';
 import { useNotifications } from '../features/notifications/hooks/useNotifications';
-import { saveFcmToken } from '../features/notifications/services/notificationService';
-import type { AppNotification } from '../features/notifications/types/notification.types';
+import {
+  getNotifications as getNotificationsService,
+  markAllAsRead as markAllAsReadService,
+  saveFcmToken,
+} from '../features/notifications/services/notificationService';
+import type { Notification, NotificationType } from '../features/notifications/types/notification.types';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
@@ -26,9 +32,9 @@ function getOrInitMessaging(): Messaging {
 }
 
 interface NotificationContextValue {
-  notifications: AppNotification[];
+  notifications: Notification[];
   unreadCount: number;
-  addNotification: (notification: AppNotification) => void;
+  addNotification: (notification: Notification) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   permissionStatus: NotificationPermission;
@@ -39,11 +45,51 @@ const NotificationContext = createContext<NotificationContextValue | null>(null)
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { token } = useAuthContext();
-  const { notifications, unreadCount, addNotification, markAsRead, markAllAsRead } = useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    addNotification,
+    markAsRead,
+    markAllAsRead,
+    replaceNotifications,
+  } = useNotifications();
   const [permissionStatus, setPermissionStatus] = useState<NotificationPermission>(
     'Notification' in window ? Notification.permission : 'denied'
   );
   const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+
+    getNotificationsService(token).then((data) => {
+      replaceNotifications(data);
+    }).catch((err) => {
+      console.error('[Notifications] Failed to fetch:', err);
+    });
+  }, [token, replaceNotifications]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const connection = new HubConnectionBuilder()
+      .withUrl(import.meta.env.VITE_SIGNALR_HUB_URL, {
+        accessTokenFactory: () => token,
+      })
+      .withAutomaticReconnect()
+      .build();
+
+    connection.on('ReceiveNotification', (notification: Notification) => {
+      addNotification(notification);
+    });
+
+    connection.start().catch((err) => {
+      console.error('[SignalR] Global connection failed:', err);
+    });
+
+    return () => {
+      connection.stop();
+    };
+  }, [token, addNotification]);
 
   const setupFcm = useCallback(async (authToken: string): Promise<void> => {
     if (unsubscribeRef.current) {
@@ -52,54 +98,49 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
     console.log('[FCM] setupFcm starting…');
     const messaging = getOrInitMessaging();
+
+    let registration: ServiceWorkerRegistration;
+    try {
+      registration = await navigator.serviceWorker.register(
+        '/firebase-messaging-sw.js',
+        { scope: '/' }
+      );
+      await navigator.serviceWorker.ready;
+    } catch (err) {
+      console.error('[FCM] Service Worker registration failed:', err);
+      return;
+    }
+
     let fcmToken: string;
     try {
       fcmToken = await getToken(messaging, {
         vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY,
+        serviceWorkerRegistration: registration,
       });
       console.log('[FCM] getToken succeeded:', fcmToken.slice(0, 20) + '…');
     } catch (err) {
       console.error('[FCM] getToken FAILED — push will not work:', err);
       return;
     }
+
     try {
       await saveFcmToken(fcmToken, authToken);
       console.log('[FCM] FCM token saved to backend successfully');
     } catch (err) {
       console.error('[FCM] saveFcmToken FAILED — backend may have stale token:', err);
     }
+
     unsubscribeRef.current = onMessage(messaging, (payload) => {
       console.log('[FCM] foreground message received. Full payload:', JSON.stringify(payload));
-      const { data, notification: n } = payload;
-      if (!data) {
-        console.warn('[FCM] payload has no "data" field — notification dropped.');
-        return;
-      }
-      if (data['type'] === 'new_message') {
-        console.log('[FCM] adding message notification from', n?.title, 'groupId:', data['groupId']);
-        addNotification({
-          id: crypto.randomUUID(),
-          type: 'new_message',
-          senderName: n?.title ?? 'Unknown',
-          messagePreview: n?.body ?? '',
-          groupId: data['groupId'] ?? '',
-          groupName: '',
-          receivedAt: new Date().toISOString(),
-          isRead: false,
-        });
-      } else if (data['type'] === 'payment_confirmed') {
-        console.log('[FCM] adding payment notification for group:', data['groupName'], 'round:', data['round']);
-        addNotification({
-          id: crypto.randomUUID(),
-          type: 'payment_confirmed',
-          groupName: data['groupName'] ?? '',
-          round: parseInt(data['round'] ?? '0', 10),
-          receivedAt: new Date().toISOString(),
-          isRead: false,
-        });
-      } else {
-        console.warn('[FCM] data.type is "' + data['type'] + '" — unhandled notification type.');
-      }
+      addNotification({
+        id: crypto.randomUUID(),
+        type: (payload.data?.['type'] as NotificationType) ?? 'NewMessage',
+        title: payload.notification?.title ?? '',
+        body: payload.notification?.body ?? '',
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        referenceId: payload.data?.['referenceId'] ?? '',
+      });
     });
     console.log('[FCM] onMessage foreground listener registered');
   }, [addNotification]);
@@ -149,9 +190,26 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     await setupFcm(token).catch((err) => console.error('[FCM] requestNotificationPermission: setupFcm failed:', err));
   }, [token, setupFcm]);
 
+  const markAllAsReadWithBackend = useCallback((): void => {
+    markAllAsRead();
+    if (token) {
+      markAllAsReadService(token).catch((err) => {
+        console.error('[Notifications] Failed to mark all as read:', err);
+      });
+    }
+  }, [token, markAllAsRead]);
+
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, addNotification, markAsRead, markAllAsRead, permissionStatus, requestNotificationPermission }}
+      value={{
+        notifications,
+        unreadCount,
+        addNotification,
+        markAsRead,
+        markAllAsRead: markAllAsReadWithBackend,
+        permissionStatus,
+        requestNotificationPermission,
+      }}
     >
       {children}
     </NotificationContext.Provider>

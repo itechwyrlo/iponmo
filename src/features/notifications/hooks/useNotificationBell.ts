@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { useNotificationContext } from '../../../context/NotificationContext';
-import type { AppNotification } from '../types/notification.types';
+import type { Notification } from '../types/notification.types';
 
 interface DropdownPosition {
   top: number;
@@ -9,7 +9,7 @@ interface DropdownPosition {
 }
 
 interface UseNotificationBellResult {
-  notifications: AppNotification[];
+  notifications: Notification[];
   unreadCount: number;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
